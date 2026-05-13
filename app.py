@@ -720,6 +720,211 @@ with eqvc2:
     st.pyplot(fraction_strip_vertical(eq_nn, eq_nd, f"{eq_nn}/{eq_nd}"))
 st.markdown("---")
 
+
+# ── X & Y AXIS TUTORIAL ───────────────────────────────────────────────────────
+st.markdown('<span class="pill p-4">Section 9 — X &amp; Y Axis: Graphing Your Work Over Time</span>',
+            unsafe_allow_html=True)
+
+st.markdown("""
+### The Word Problem
+
+Marcus and Destiny are spreading mulch at the community garden.
+They have **2 piles** — same size. They start working together at 8:00 AM.
+
+After working for a while, Marcus notices they have finished
+**{frac_numer}/{frac_denom}** of Pile 1.
+
+**Nobody knows how long the whole job will take.**
+
+Their teacher asks: *"Can you graph your progress and estimate
+what time you will finish both piles?"*
+
+That is what we are going to do — using an **x and y axis.**
+""".format(frac_numer=frac_numer, frac_denom=frac_denom))
+
+st.markdown("""
+<div style="background:#f0f9ff;border:1px solid #7dd3fc;border-left:4px solid #0891b2;
+  border-radius:0 10px 10px 0;padding:16px 20px;margin:12px 0;">
+  <div style="font-weight:700;color:#111827;margin-bottom:8px;font-size:1rem;">
+    What do X and Y mean here?</div>
+  <div style="color:#111827;font-size:.9rem;line-height:1.9;">
+    <strong>X-axis (horizontal) = Time</strong> — hours worked. We do not know the total yet.
+    Time always goes on the x-axis when something changes over time.<br><br>
+    <strong>Y-axis (vertical) = Piles completed</strong> — goes from 0 (nothing done)
+    to 2 (both piles finished). We divide it into halves, quarters, and eighths
+    so we can plot any fraction.<br><br>
+    <strong>The line</strong> = your work rate. Every hour you move up the same amount.
+    That steady climb is what makes this a <em>linear function</em>: y = rate × x.
+  </div>
+</div>""", unsafe_allow_html=True)
+
+# ── BUILD THE GRAPH ────────────────────────────────────────────────────────────
+st.markdown("#### Your Progress Graph")
+st.markdown("Adjust your **time estimate** below — the graph updates live. "
+            "Try to find the x value where the line crosses **y = 2 piles**.")
+
+student_time_estimate = st.number_input(
+    "Your estimate: total hours to finish BOTH piles",
+    min_value=0.5, max_value=24.0, value=round(2/rate, 1), step=0.5,
+    help="Drag up or down until the line crosses y=2 at your estimated time.")
+
+def xy_axis_graph(rate, hours_worked, frac_done, time_estimate):
+    """X-Y graph: x=time, y=piles done (0 to 2), with dotted fraction grid."""
+    true_total = 2 / rate          # actual time to finish both piles
+    x_max      = max(time_estimate * 1.15, true_total * 1.1, 6.0)
+
+    fig, ax = plt.subplots(figsize=(9, 6), facecolor="#f5f5f3")
+    ax.set_facecolor("#f8fafc")
+    ax.set_xlim(0, x_max)
+    ax.set_ylim(0, 2.15)
+
+    # ── Y-axis fraction grid lines (halves down to eighths) ──
+    y_fractions = []
+    for d in [8, 4, 2]:
+        for n in range(1, 2*d):
+            y_fractions.append((n, d, n/d))
+    # deduplicate by value
+    seen_y = set(); y_unique = []
+    for n,d,v in sorted(y_fractions, key=lambda x: x[2]):
+        if round(v,6) not in seen_y and v <= 2.0:
+            seen_y.add(round(v,6)); y_unique.append((n,d,v))
+
+    for n,d,v in y_unique:
+        lw   = 1.4 if d==2 else 0.9 if d==4 else 0.5
+        dash = (0,(4,3)) if d==2 else (0,(3,4)) if d==4 else (0,(2,5))
+        col  = "#374151" if d==2 else "#6b7280" if d==4 else "#9ca3af"
+        alpha = 0.7 if d==2 else 0.5 if d==4 else 0.3
+        ax.axhline(y=v, color=col, linewidth=lw, linestyle=dash, alpha=alpha, zorder=1)
+        # Y-axis label
+        if d <= 4:
+            label = f"{n}/{d}" if v != int(v) else f"{int(v)}"
+            ax.text(-x_max*0.025, v, label, ha="right", va="center",
+                    fontsize=8, color=col, fontweight="bold" if d==2 else "normal")
+
+    # Whole pile markers (y=1 and y=2)
+    ax.axhline(y=1, color="#16a34a", linewidth=2.0, linestyle="--", alpha=0.8, zorder=2)
+    ax.axhline(y=2, color="#e11d48", linewidth=2.0, linestyle="--", alpha=0.8, zorder=2)
+    ax.text(x_max*0.98, 1.02, "Pile 1 done ✅", ha="right", fontsize=8.5,
+            color="#16a34a", fontweight="bold")
+    ax.text(x_max*0.98, 2.03, "Both piles done 🏆", ha="right", fontsize=8.5,
+            color="#e11d48", fontweight="bold")
+
+    # ── Work rate line ──
+    x_line = np.linspace(0, x_max, 200)
+    y_line = rate * x_line
+    y_line_clipped = np.minimum(y_line, 2.0)
+    ax.plot(x_line, y_line_clipped, color="#0891b2", linewidth=3,
+            label=f"Work rate: y = {rate:.3f}x", zorder=4)
+
+    # ── True finish time ──
+    ax.axvline(x=true_total, color="#16a34a", linewidth=1.5,
+               linestyle=(0,(4,3)), alpha=0.7, zorder=3)
+    ax.text(true_total+x_max*0.01, 1.85, f"Actual finish {true_total:.2f} hrs",
+            fontsize=8, color="#16a34a", va="top")
+
+    # ── Student estimate line ──
+    y_at_estimate = min(rate * time_estimate, 2.0)
+    ax.axvline(x=time_estimate, color="#f97316", linewidth=2.0,
+               linestyle=(0,(5,3)), alpha=0.9, zorder=3)
+    ax.text(time_estimate+x_max*0.01, 0.12, f"Your estimate: {time_estimate} hrs",
+            fontsize=8, color="#f97316")
+
+    # ── Current position dot ──
+    x_now  = hours_worked
+    y_now  = frac_done          # fraction of pile 1 = y value
+    ax.plot(x_now, y_now, "o", color="#e11d48", markersize=12, zorder=6,
+            label=f"Now: ({x_now}h, {y_now:.3f} piles)")
+    # Dotted drop lines to both axes
+    ax.plot([0, x_now], [y_now, y_now], color="#e11d48",
+            linewidth=1.2, linestyle=(0,(3,3)), alpha=0.7, zorder=5)
+    ax.plot([x_now, x_now], [0, y_now], color="#e11d48",
+            linewidth=1.2, linestyle=(0,(3,3)), alpha=0.7, zorder=5)
+    ax.text(x_now+x_max*0.01, y_now+0.04,
+            f"  ({x_now}h, {frac_numer}/{frac_denom})",
+            fontsize=9, color="#e11d48", fontweight="bold", zorder=7)
+
+    # ── Axes styling ──
+    ax.set_xlabel("Time (hours)", fontsize=11, fontweight="bold", color="#111827")
+    ax.set_ylabel("Piles Completed", fontsize=11, fontweight="bold", color="#111827")
+    ax.set_title("Mulch Work Progress — Both Piles", fontsize=12,
+                 fontweight="bold", color="#111827", pad=10)
+
+    # X-axis ticks
+    x_ticks = np.arange(0, x_max+0.5, 0.5)
+    ax.set_xticks(x_ticks)
+    ax.set_xticklabels([f"{t:.1f}" for t in x_ticks], fontsize=8, color="#374151")
+
+    # Y-axis major ticks
+    ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0])
+    ax.set_yticklabels(["0","1/4","1/2","3/4","1","1¼","1½","1¾","2"],
+                       fontsize=9, color="#374151")
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#374151")
+    ax.spines["bottom"].set_color("#374151")
+    ax.tick_params(colors="#374151")
+    ax.grid(axis="x", color="#e2e8f0", linewidth=0.8, alpha=0.5)
+
+    # Shaded "done" zone
+    x_fill = np.linspace(0, min(true_total, x_max), 100)
+    y_fill = np.minimum(rate * x_fill, 2.0)
+    ax.fill_between(x_fill, 0, y_fill, alpha=0.08, color="#0891b2", zorder=0)
+
+    ax.legend(loc="upper left", fontsize=9, framealpha=0.9)
+    fig.tight_layout()
+    return fig
+
+st.pyplot(xy_axis_graph(rate, hours_worked, frac_done, student_time_estimate))
+
+# ── Estimate feedback ──────────────────────────────────────────────────────────
+true_total_time = 2 / rate
+estimate_error  = abs(student_time_estimate - true_total_time)
+estimate_pct    = (estimate_error / true_total_time) * 100
+
+if estimate_error < 0.25:
+    est_msg   = f"Excellent estimate! You are only {estimate_error:.2f} hrs off."
+    est_color = "#16a34a"
+elif estimate_error < 1.0:
+    est_msg   = f"Good estimate — {estimate_error:.2f} hrs off ({estimate_pct:.0f}%)."
+    est_color = "#d97706"
+else:
+    diff_dir  = "too high" if student_time_estimate > true_total_time else "too low"
+    est_msg   = f"Off by {estimate_error:.2f} hrs ({estimate_pct:.0f}%) — {diff_dir}. Try again!"
+    est_color = "#e11d48"
+
+st.markdown(f"""
+<div style="background:#ffffff;border:2px solid {est_color};border-radius:12px;
+  padding:16px 22px;margin:14px 0;">
+  <div style="font-size:1.1rem;font-weight:700;color:{est_color};">{est_msg}</div>
+  <div style="font-size:.88rem;color:#374151;margin-top:8px;line-height:1.8;">
+    <strong>Actual finish time:</strong> {true_total_time:.2f} hours &nbsp;|&nbsp;
+    <strong>Your estimate:</strong> {student_time_estimate} hours<br>
+    <strong>Formula:</strong> Total time = 2 piles ÷ {rate:.4f} pile/hr = {true_total_time:.2f} hrs<br>
+    <strong>As a fraction:</strong> {Fraction(frac_numer,frac_denom)} done in {hours_worked} hrs
+    → rate = {Fraction(frac_numer,frac_denom)}/{int(hours_worked) if hours_worked==int(hours_worked) else hours_worked}
+    pile/hr = {rate:.4f} pile/hr
+  </div>
+</div>""", unsafe_allow_html=True)
+
+# ── Reading the graph lesson ───────────────────────────────────────────────────
+st.markdown("""
+<div style="background:#fefce8;border:1px solid #fbbf24;border-left:4px solid #f59e0b;
+  border-radius:0 10px 10px 0;padding:16px 20px;margin:12px 0;">
+  <div style="font-weight:700;color:#111827;margin-bottom:8px;">
+    How to Read This Graph</div>
+  <div style="color:#111827;font-size:.9rem;line-height:1.9;">
+    <strong>Find your dot</strong> (red circle) — that is where you are RIGHT NOW.<br>
+    Drop straight DOWN to the x-axis → that tells you how many hours you have worked.<br>
+    Go straight LEFT to the y-axis → that tells you what fraction of the whole job is done.<br><br>
+    <strong>The blue line</strong> is your work rate — it is straight because you work at a constant rate.<br>
+    Every hour you move up the same amount on the y-axis. That equal spacing is what makes it LINEAR.<br><br>
+    <strong>Where the line hits y = 2</strong> → read down to the x-axis → that is your finish time.
+  </div>
+</div>""", unsafe_allow_html=True)
+
+st.markdown("---")
+
 # ── QUIZ 1 ────────────────────────────────────────────────────────────────────
 st.header("Quiz 1 — Fractions & Rates")
 q1_questions = {
