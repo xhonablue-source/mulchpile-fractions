@@ -195,7 +195,6 @@ def vertical_pile_graphic(frac_done_1, frac_done_2, hours):
         ax.text(0.50, 0.02 + 0.90*frac_done * 0.5,
                 f"{frac_done:.2f} DONE",
                 ha="center", va="center", fontsize=9,
-                ha="center", va="center", fontsize=9,
                 color="white" if frac_done > 0.12 else "#374151",
                 fontweight="bold", zorder=6)
 
