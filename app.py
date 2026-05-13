@@ -140,27 +140,38 @@ def vertical_pile_graphic(frac_done_1, frac_done_2, hours):
         ax.axis("off")
         ax.set_title(label, fontsize=12, fontweight="bold", color="#111827", pad=8)
 
-        # Full pile background (grey column)
+        # Full pile = MULCH STILL HERE (brown/tan — the pile IS the undone portion)
         pile = patches.FancyBboxPatch((0.25, 0.02), 0.5, 0.90,
-            boxstyle="round,pad=0.01", facecolor="#e5e7eb",
-            edgecolor="#9ca3af", linewidth=2)
+            boxstyle="round,pad=0.01", facecolor="#92400e",
+            edgecolor="#78350f", linewidth=2, alpha=0.85)
         ax.add_patch(pile)
 
-        # Filled portion (bottom up = done)
+        # Mulch texture dots on the UNDONE (remaining) pile
+        frac_undone = 1 - frac_done
+        if frac_undone > 0.05:
+            rng = np.random.default_rng(99)
+            n_dots = int(frac_undone * 80)
+            fill_start = 0.02 + 0.90 * frac_done
+            fill_end   = 0.02 + 0.90
+            ys_dots = rng.uniform(fill_start + 0.02, fill_end - 0.02, n_dots)
+            xs_dots = rng.uniform(0.28, 0.72, n_dots)
+            ax.scatter(xs_dots, ys_dots, s=8, color="#fbbf24", alpha=0.35, zorder=4)
+
+        # Spread portion (bottom = done — green ground showing through)
         if frac_done > 0:
             fill_h = 0.90 * frac_done
             fill = patches.FancyBboxPatch((0.25, 0.02), 0.5, fill_h,
                 boxstyle="round,pad=0.01", facecolor=color_done,
-                edgecolor="none", alpha=0.85)
+                edgecolor="none", alpha=0.80)
             ax.add_patch(fill)
 
-        # Mulch texture dots on filled portion
+        # Texture dots on DONE (spread) area — lighter speckles like spread mulch
         if frac_done > 0.05:
-            rng = np.random.default_rng(42)
-            n_dots = int(frac_done * 60)
-            xs = rng.uniform(0.28, 0.72, n_dots)
-            ys = rng.uniform(0.02, 0.02 + 0.90*frac_done - 0.03, n_dots)
-            ax.scatter(xs, ys, s=6, color="white", alpha=0.4, zorder=4)
+            rng2 = np.random.default_rng(42)
+            n_dots2 = int(frac_done * 50)
+            xs2 = rng2.uniform(0.28, 0.72, n_dots2)
+            ys2 = rng2.uniform(0.03, 0.02 + 0.90*frac_done - 0.03, n_dots2)
+            ax.scatter(xs2, ys2, s=5, color="white", alpha=0.3, zorder=4)
 
         # Dotted fraction lines on y-axis
         for frac, frac_label in fraction_marks:
