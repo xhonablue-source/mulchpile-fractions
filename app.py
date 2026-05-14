@@ -815,7 +815,7 @@ def xy_axis_graph(rate, hours_worked, frac_done, time_estimate):
     # Whole pile markers (y=1 and y=2)
     ax.axhline(y=1, color="#16a34a", linewidth=2.0, linestyle="--", alpha=0.8, zorder=2)
     ax.axhline(y=2, color="#e11d48", linewidth=2.0, linestyle="--", alpha=0.8, zorder=2)
-    ax.text(x_max*0.98, 1.02, "Pile 1 done ✅", ha="right", fontsize=8.5,
+    ax.text(x_max*0.98, 1.02, "Pile 1 done!", ha="right", fontsize=8.5,
             color="#16a34a", fontweight="bold")
     ax.text(x_max*0.98, 2.03, "Both piles done!", ha="right", fontsize=8.5,
             color="#e11d48", fontweight="bold")
